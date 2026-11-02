@@ -1,227 +1,227 @@
 #!/usr/bin/env python3
-"""Generate responsive CV HTML from files/cv.pdf. No CV content is hard-coded.
+"""Convert CV.tex to responsive HTML, with explicit cventry/cvline mappings.
 
-Uses text blocks, font sizes, date labels, and PDF link annotations. Best suited
-for selectable-text CVs with a single reading column or a narrow date column.
-The generated page is not a pixel-for-pixel reproduction of the PDF.
+Uses Pandoc's LaTeX reader for links, accents, lists, emphasis, and mathematics.
+No PDF text extraction or external Python packages are needed.
 """
 import argparse
-from collections import Counter
+import copy
 from html import escape
+import json
 from pathlib import Path
 import re
-import unicodedata
-from urllib.parse import urlsplit
-
-import pymupdf
-
-DATE = re.compile(r'^(?:(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\s+)?\d{4}(?:\s*[–—-]\s*(?:\d{4}|[Pp]resent))?$')
-LABEL = re.compile(r'^(?:[\w -]{2,28}:|https?://|arXiv:)', re.UNICODE)
-EMAIL = re.compile(r'^[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}$')
+import shutil
+import subprocess
 
 
-def clean(text):
-    return unicodedata.normalize('NFKC', text).replace('\u00ad', '').replace('\ufffd', '?').strip()
-
-
-def line_text(line):
-    return clean(''.join(span['text'] for span in line['spans']))
-
-
-def join_lines(lines):
-    """Reflow wrapped text while repairing ordinary word and URL line breaks."""
-    text = ''
-    for value in lines:
-        value = value.strip()
-        if not value:
-            continue
-        last_word = text.rsplit(' ', 1)[-1]
-        next_word = value.split(' ', 1)[0]
-        if text.endswith('-') and '://' in last_word:
-            text += value  # a literal hyphen inside a URL
-        elif (text.endswith('-') and value[0].islower()
-              and next_word not in {'and', 'or', 'of', 'to', 'in'}):
-            text = text[:-1] + value
+def strip_comments(source):
+    output, i = [], 0
+    while i < len(source):
+        if source[i] == '\\' and i + 1 < len(source):
+            output.append(source[i:i+2]); i += 2
+        elif source[i] == '%':
+            end = source.find('\n', i)
+            i = len(source) if end < 0 else end + 1
         else:
-            text += (' ' if text else '') + value
-    return text
+            output.append(source[i]); i += 1
+    source = ''.join(output)
+    return re.sub(r'\\begin\s*\{comment\}.*?\\end\s*\{comment\}', '', source, flags=re.S)
 
 
-def safe_uri(uri):
-    return urlsplit(uri).scheme.lower() in {'https', 'http', 'mailto'}
+def group_at(source, position):
+    while position < len(source) and source[position].isspace():
+        position += 1
+    if position >= len(source) or source[position] != '{':
+        raise ValueError('Expected a braced argument after a CV command.')
+    start, depth, i = position + 1, 1, position + 1
+    while i < len(source):
+        if source[i] == '\\':
+            i += 2; continue
+        if source[i] == '{': depth += 1
+        if source[i] == '}': depth -= 1
+        if depth == 0: return source[start:i], i + 1
+        i += 1
+    raise ValueError('Unclosed braced argument in CV.tex.')
 
 
-def links_for(block, annotations, page):
-    """Keep the actual PDF label as well as its target, including wrapped links."""
-    box = pymupdf.Rect(block['bbox'])
-    found = {}
-    for item in annotations:
-        uri = item.get('uri', '')
-        if uri and safe_uri(uri) and box.intersects(item['from']):
-            label = join_lines(page.get_textbox(item['from']).splitlines()).strip()
-            found.setdefault(uri, []).append(label)
-    return found
+def preprocess(source):
+    source = strip_comments(source)
+    match = re.search(r'\\begin\s*\{document\}', source)
+    end = re.search(r'\\end\s*\{document\}', source)
+    if not match or not end:
+        raise ValueError('CV.tex must contain a document environment.')
+    preamble, body = source[:match.start()], source[match.end():end.start()]
+    # enumitem's optional label syntax changes PDF numbering, not list content.
+    for opening in (r'\begin{enumerate}', r'\begin{itemize}'):
+        cursor = 0
+        while True:
+            found = body.find(opening, cursor)
+            if found < 0: break
+            position = found + len(opening)
+            while position < len(body) and body[position].isspace(): position += 1
+            if position < len(body) and body[position] == '[':
+                start, depth = position, 1
+                position += 1
+                while position < len(body) and depth:
+                    if body[position] == '\\': position += 2; continue
+                    if body[position] == '[': depth += 1
+                    if body[position] == ']': depth -= 1
+                    position += 1
+                if depth: raise ValueError('Unclosed optional list arguments in CV.tex.')
+                body = body[:start] + body[position:]
+            cursor = found + len(opening)
+    body = re.sub(r'\\hrule(?:\s+(?:height|width|depth)\s*[+-]?\d*\.?\d+\s*(?:pt|mm|cm|in|em|ex))*', '', body)
+    replacements, out, i = {}, [], 0
+    while i < len(body):
+        if body[i] != '\\':
+            out.append(body[i]); i += 1; continue
+        command = re.match(r'\\([A-Za-z]+|.)', body[i:], re.S)
+        if not command:
+            out.append(body[i]); i += 1; continue
+        name = command[1]; stop = i + len(command[0])
+        if name not in {'cventry', 'cvline'}:
+            out.append(command[0]); i = stop; continue
+        args = []
+        for _ in range(4 if name == 'cventry' else 2):
+            value, stop = group_at(body, stop); args.append(value)
+        marker = f'TEXCVBLOCK{len(replacements):04d}'
+        if marker in source: raise ValueError('Reserved TEXCVBLOCK marker found in CV.tex.')
+        replacements[marker] = (name, args)
+        out.append('\n\\begin{quote}\n' + marker + '\n\\end{quote}\n')
+        i = stop
+    return preamble, ''.join(out), replacements
 
 
-def inline_links(text, links):
-    """Escape all PDF text, inserting anchors only around matching text labels."""
-    matches = []
-    for uri, labels in links.items():
-        candidates = [uri, *labels, join_lines(labels)]
-        if uri.startswith('mailto:'):
-            candidates.append(uri[7:])
-        elif uri.startswith(('https://', 'http://')):
-            candidates.append(uri.split('://', 1)[1].rstrip('/'))
-        for label in candidates:
-            # Sentence punctuation belongs outside URL links.
-            label = label.strip().rstrip('.,;')
-            if not label:
-                continue
-            for match in re.finditer(re.escape(label), text):
-                matches.append((match.start(), match.end(), uri))
-    # Prefer the complete label over overlapping fragments of a wrapped link.
-    selected = []
-    for start, end, uri in sorted(matches, key=lambda m: (-(m[1]-m[0]), m[0])):
-        if not any(start < b and end > a for a, b, _ in selected):
-            selected.append((start, end, uri))
-    result, cursor = [], 0
-    for start, end, uri in sorted(selected):
-        result.append(escape(text[cursor:start]))
-        result.append(f'<a href="{escape(uri, quote=True)}">{escape(text[start:end])}</a>')
-        cursor = end
-    result.append(escape(text[cursor:]))
-    return ''.join(result)
+def pandoc(text, *options):
+    if not shutil.which('pandoc'):
+        raise ValueError('Pandoc is required. See UPDATE-CV.md for installation.')
+    result = subprocess.run(['pandoc', *options], input=text, text=True,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if result.returncode:
+        raise ValueError('Pandoc conversion failed:\n' + result.stderr)
+    if result.stderr.strip(): print(result.stderr.strip())
+    return result.stdout
 
 
-def is_bold(line):
-    spans = [s for s in line['spans'] if s['text'].strip()]
-    return bool(spans) and all('bold' in s['font'].lower() or s['flags'] & 16 for s in spans)
+def plain(node):
+    if isinstance(node, list): return ''.join(plain(n) for n in node)
+    if not isinstance(node, dict): return ''
+    kind, value = node.get('t'), node.get('c')
+    if kind == 'Str': return value
+    if kind in {'Space', 'SoftBreak', 'LineBreak'}: return ' '
+    if kind in {'Link', 'Image'}: return plain(value[1])
+    if kind in {'Span', 'Div'}: return plain(value[1])
+    if kind == 'Header': return plain(value[2])
+    if kind == 'Math': return value[1]
+    return plain(value)
 
 
-def paragraphs(lines, links=None, preserve_lines=False):
-    """Reflow prose; keep separate name/affiliation/contact lines for referees."""
-    if preserve_lines:
-        return ''.join('<p>' + inline_links(line_text(line), links or {}) + '</p>'
-                       for line in lines if line_text(line))
-    groups, current = [], []
-    for line in lines:
-        text = line_text(line)
-        if not text:
-            continue
-        if current and (LABEL.match(text) or EMAIL.match(text) or is_bold(line)):
-            groups.append(join_lines(current))
-            current = []
-        current.append(text)
-        if is_bold(line):
-            groups.append(join_lines(current))
-            current = []
-    if current:
-        groups.append(join_lines(current))
-    return ''.join('<p>' + inline_links(text, links or {}) + '</p>' for text in groups)
+def div(classes, blocks, identifier=''):
+    return {'t':'Div', 'c':[[identifier, classes.split(), []], blocks]}
 
 
-def render_body(pdf_path):
-    with pymupdf.open(pdf_path) as doc:
-        if doc.needs_pass:
-            raise ValueError('The CV PDF is password-protected; provide an unlocked PDF.')
-        records, sizes = [], Counter()
-        for page in doc:
-            annotations = page.get_links()
-            for block in page.get_text('dict')['blocks']:
-                if block.get('type') != 0:
-                    continue
-                lines = [line for line in block['lines'] if line_text(line)]
-                if not lines:
-                    continue
-                spans = [s for line in lines for s in line['spans'] if s['text'].strip()]
-                text = join_lines([line_text(line) for line in lines])
-                # Remove small running footers/page numbers, not ordinary body text.
-                size = max(s['size'] for s in spans)
-                if block['bbox'][1] > page.rect.height * .94 and size < 10:
-                    continue
-                block['lines'] = lines
-                records.append((block, text, size, links_for(block, annotations, page)))
-                for span in spans:
-                    sizes[round(span['size'], 1)] += len(span['text'])
-        if not records or sum(len(r[1]) for r in records) < 50:
-            raise ValueError('No usable selectable text found in files/cv.pdf. Export a text-based PDF; scanned/image-only CVs need OCR first.')
-        body_size = sizes.most_common(1)[0][0]
-        headings, used_ids = [], set()
-        name = ''
-        output = []
-        section_open = False
-        current_section = ''
-        for index, (block, text, size, links) in enumerate(records):
-            if index == 0 and size > body_size * 1.6:
-                name = text
-                output.append('<p class="cv-name">' + escape(text) + '</p>')
-                continue
-            if text.casefold() in {'curriculum vitae', 'curriculum vitæ', 'cv'}:
-                continue
-            heading = size > body_size * 1.17 and len(text) < 100 and len(block['lines']) <= 2
-            if heading:
-                slug = re.sub(r'[^a-z0-9]+', '-', unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode().lower()).strip('-') or 'section'
-                base, count = slug, 2
-                while slug in used_ids:
-                    slug = f'{base}-{count}'
-                    count += 1
-                used_ids.add(slug)
-                if section_open:
-                    output.append('</section>')
-                output.append(f'<section class="section cv-section" id="{slug}"><h2>{escape(text)}</h2>')
-                section_open = True
-                headings.append((slug, text))
-                current_section = text.casefold()
-                continue
-            lines = block['lines'][:]
-            keep_lines = current_section in {'referees', 'references'}
-            date = line_text(lines[0]) if DATE.fullmatch(line_text(lines[0])) else ''
-            if date:
-                lines.pop(0)
-                title = line_text(lines.pop(0)) if lines else ''
-                title_html = '<h3>' + inline_links(title, links) + '</h3>' if title else ''
-                content = title_html + paragraphs(lines, links, preserve_lines=keep_lines)
-                output.append('<article class="cv-entry"><p class="cv-date">' + escape(date) + '</p><div>' + content)
-            else:
-                output.append('<article class="cv-pdf-block">' + paragraphs(lines, links, preserve_lines=keep_lines))
-            output.append('</div></article>' if date else '</article>')
-        if section_open:
-            output.append('</section>')
-        nav = '<nav class="cv-jump" aria-label="CV sections">' + ''.join(
-            f'<a href="#{slug}">{escape(title)}</a>' for slug, title in headings
-        ) + '</nav>' if headings else ''
-        # Put the download and section navigation after the optional name.
-        insert = 1 if name else 0
-        output.insert(insert, '<p><a class="button" href="files/cv.pdf">Download CV (PDF) ↓</a></p>' + nav)
-        return '<div class="cv-detail"><p class="eyebrow">Academic background</p><h1>Curriculum vitae</h1>\n' + '\n'.join(output) + '\n</div>'
+def inlines(blocks):
+    result = []
+    for block in blocks:
+        if result: result.append({'t':'LineBreak'})
+        if block['t'] in {'Para', 'Plain'}: result.extend(block['c'])
+        elif block['t'] == 'Div': result.extend(inlines(block['c'][1]))
+        else: raise ValueError('A CV date/title contains an unsupported block: ' + block['t'])
+    return result
 
 
-def build(pdf, template, output):
-    # Extract and validate first; leave the previous HTML untouched on failure.
-    body = render_body(pdf)
+def render_body(tex):
+    preamble, body, replacements = preprocess(tex.read_text(encoding='utf-8'))
+    def read(fragment):
+        source = preamble + '\n\\begin{document}\n' + fragment + '\n\\end{document}\n'
+        return json.loads(pandoc(source, '-f', 'latex+raw_tex', '-t', 'json'))
+    doc = read(body)
+    mapped = {}
+    for marker, (name, args) in replacements.items():
+        fragments = [read(arg)['blocks'] for arg in args]
+        if name == 'cventry':
+            date, title, institution, details = fragments
+            heading = {'t':'Header','c':[3, ['',[],[]], inlines(title)]}
+            mapped[marker] = div('cv-entry', [
+                div('cv-date', date),
+                div('cv-entry-body', [heading, div('cv-org', institution), div('cv-entry-details', details)])
+            ])
+        else:
+            label, value = fragments
+            mapped[marker] = div('cv-skill', [div('cv-skill-label', label), div('cv-skill-value', value)])
+
+    def walk(node):
+        if isinstance(node, list):
+            items = [walk(n) for n in node]
+            return [n for n in items if not (isinstance(n,dict) and n.get('t')=='Div' and not n['c'][1])]
+        if not isinstance(node, dict): return node
+        if node.get('t') == 'BlockQuote':
+            marker = plain(node['c']).strip()
+            if marker in mapped: return walk(copy.deepcopy(mapped[marker]))
+        if node.get('t') in {'RawInline', 'RawBlock'} and node['c'][0] in {'tex','latex'}:
+            raw = node['c'][1].strip()
+            referee = re.fullmatch(r'\\begin\s*\{flushleft\}(.*?)\\end\s*\{flushleft\}', raw, flags=re.S)
+            if referee:
+                return div('cv-referee', walk(read(referee[1])['blocks']))
+            # These commands affect the PDF's typography/pagination only.
+            if re.match(r'^\\(?:fontsize|selectfont|vspace|hspace|hrule|newpage|clearpage|pagebreak|noindent|par\b|color|sffamily|small|large|Large|addvspace)', raw):
+                return {'t':'Str','c':''} if node['t']=='RawInline' else div('', [])
+            if raw == '\\textperiodcentered':
+                return {'t':'Str','c':'·'}
+            if raw in {'\\enspace', '\\quad', '\\qquad', '\\thinspace'}:
+                return {'t':'Space'}
+            if raw in {'\\LaTeX','\\TeX'}:
+                return {'t':'Str','c':raw[1:]}
+            raise ValueError('Unsupported LaTeX in HTML conversion: ' + raw + '. Add an explicit mapping rather than silently losing content.')
+        return {key:walk(value) for key,value in node.items()}
+    blocks = walk(doc['blocks'])
+    # Presentation-only empty blocks and the redundant PDF subtitle/rule.
+    blocks = [b for b in blocks if b['t'] != 'HorizontalRule'
+              and not (b['t']=='Para' and (not plain(b).strip() or plain(b).strip().casefold()=='curriculum vitae'))]
+    intro, sections, current = [], [], None
+    for block in blocks:
+        if block['t']=='Header' and block['c'][0] <= 2:
+            level, attr, title = block['c']
+            block['c'][0] = 2
+            current = div('section cv-section', [block], attr[0])
+            # The section owns the id; do not duplicate it on its heading.
+            block['c'][1][0] = ''
+            sections.append(current)
+        elif current is None: intro.append(block)
+        else: current['c'][1].append(block)
+    if intro and intro[0]['t']=='Para': intro[0] = div('cv-name', [intro[0]])
+    if not sections: raise ValueError('No sections found in CV.tex.')
+    headings = [(s['c'][0][0], plain(s['c'][1][0])) for s in sections]
+    nav = '<nav class="cv-jump" aria-label="CV sections">' + ''.join(
+        f'<a href="#{escape(key,quote=True)}">{escape(title)}</a>' for key,title in headings) + '</nav>'
+    def html(items):
+        document = {**doc, 'meta':{}, 'blocks':items}
+        return pandoc(json.dumps(document), '-f', 'json', '-t', 'html5', '--mathml', '--wrap=none')
+    return ('<div class="cv-detail"><p class="eyebrow">Academic background</p><h1>Curriculum vitae</h1>\n'
+            + html(intro) + '<p><a class="button" href="files/cv.pdf">Download CV (PDF) ↓</a></p>\n'
+            + nav + '\n' + html(sections) + '\n</div>')
+
+
+def build(tex, template, output):
+    body = render_body(tex)
     source = template.read_text(encoding='utf-8')
-    # Match a boolean marker whether it is followed by another attribute or >.
     pattern = r'(<main\b(?=[^>]*\bdata-cv-content(?:\s|>))[^>]*>).*?(</main>)'
     if len(re.findall(pattern, source, flags=re.S)) != 1:
         raise ValueError('cv.html must contain exactly one <main ... data-cv-content> element.')
-    rendered = re.sub(pattern, lambda m: m[1] + '\n<!-- Generated from files/cv.pdf. Do not edit CV text here. -->\n' + body + '\n' + m[2], source, count=1, flags=re.S)
+    result = re.sub(pattern, lambda m: m[1]+'\n<!-- Generated from CV.tex. Do not edit CV text here. -->\n'+body+'\n'+m[2], source, count=1, flags=re.S)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(rendered, encoding='utf-8')
-    print(f'Generated {output} from {pdf}')
+    output.write_text(result, encoding='utf-8')
+    print(f'Generated {output} from {tex}')
 
 
 def main():
     root = Path(__file__).resolve().parents[1]
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--pdf', type=Path, default=root / 'files/cv.pdf')
-    parser.add_argument('--template', type=Path, default=root / 'cv.html')
-    parser.add_argument('--output', type=Path, default=root / 'cv.html')
+    parser.add_argument('--tex', type=Path, default=root/'CV.tex')
+    parser.add_argument('--template', type=Path, default=root/'cv.html')
+    parser.add_argument('--output', type=Path, default=root/'cv.html')
     args = parser.parse_args()
-    try:
-        build(args.pdf, args.template, args.output)
-    except (ValueError, OSError, RuntimeError) as error:
-        parser.exit(1, f'CV generation failed: {error}\n')
+    try: build(args.tex, args.template, args.output)
+    except (ValueError, OSError) as error: parser.exit(1, f'CV generation failed: {error}\n')
 
-
-if __name__ == '__main__':
-    main()
+if __name__=='__main__': main()

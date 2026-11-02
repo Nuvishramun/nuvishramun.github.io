@@ -5,3 +5,16 @@
 /* Flowing text extracted from the PDF; no fixed page widths or positioning. */
 .cv-pdf-block{padding:13px 0;overflow-wrap:anywhere}.cv-pdf-block p{margin:5px 0}
 @media print{.cv-pdf-block{break-inside:avoid}}
+
+/* Structured TeX conversion: keep section rules and entry fields explicit. */
+.cv-detail > .cv-section{border-top:1px solid var(--line);padding-top:31px;margin-top:38px}
+.cv-detail > .cv-name p{font:inherit;color:var(--text);margin:0}
+.cv-entry .cv-date p{font-size:12px;color:var(--teal);margin:4px 0}
+.cv-entry .cv-org p{font-weight:500;color:var(--text)}
+.cv-entry-body{min-width:0}.cv-entry-details{margin-top:8px}
+.cv-section ol{padding-left:24px}.cv-section li{padding-left:5px;margin-bottom:18px}
+.cv-referee{padding:13px 0}.cv-referee p{margin:0}
+.cv-skill{display:grid;grid-template-columns:96px minmax(0,1fr);gap:22px}
+.cv-skill-label p{font-weight:600}.cv-skill-value{min-width:0}
+@media(max-width:520px){.cv-skill{grid-template-columns:1fr;gap:4px}}
+@media print{.cv-referee,.cv-entry,.cv-section li{break-inside:avoid}}

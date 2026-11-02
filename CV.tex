@@ -1,0 +1,371 @@
+% MATHEMATICS CV | Compile with pdfLaTeX (Overleaf: pdfLaTeX).
+% Replace every [bracketed field]; delete entries/sections that do not apply.
+% Research interests, PhD topic, teaching scope and software reflect the
+% background supplied. All other entries are explicitly placeholders.
+% List only actual papers, awards, talks and appointments. Do not list an
+% unsubmitted paper as submitted, or a preprint as a refereed publication.
+% Each \cventry has {date}{title}{institution / context}{details}.
+% Remove \newpage below if you prefer automatic pagination as the CV grows.
+\documentclass[11pt,a4paper]{article}
+\usepackage[shortlabels]{enumitem}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathpazo}
+\usepackage[scaled=0.94]{helvet}
+\usepackage{microtype}
+\usepackage[a4paper,left=23mm,right=23mm,top=19mm,bottom=20mm]{geometry}
+\usepackage{xcolor,tabularx,array,enumitem,titlesec,fancyhdr,lastpage,etoolbox}
+\definecolor{accent}{HTML}{176B68}
+\definecolor{ink}{HTML}{242D32}
+\definecolor{muted}{HTML}{59666D}
+\definecolor{rulegrey}{HTML}{CBD8D7}
+\usepackage[colorlinks=true,urlcolor=accent,linkcolor=accent]{hyperref}
+
+\usepackage{comment}
+
+%longtable
+%\usepackage{longtable} % Tables that can span multiple pages
+%\usepackage{booktabs}  % \toprule, \midrule, \bottomrule
+%\usepackage{makecell}  % \thead
+%\usepackage{setspace}
+
+\hypersetup{pdftitle={Vishnuram Curriculum Vitae},pdfauthor={Vishnuram Arumugam}}
+\urlstyle{same}
+\color{ink}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlength{\tabcolsep}{0pt}
+\setlength{\emergencystretch}{2em}
+\raggedbottom
+
+% Change the accent colour above to restyle the entire document.
+\titleformat{\section}{\Large\sffamily\bfseries\color{accent}}{}{0pt}{}
+[\vspace{2pt}{\color{rulegrey}\titlerule[2pt]}]
+\titlespacing*{\section}{0pt}{16pt}{8pt}
+\setlist[itemize]{leftmargin=1.2em,itemsep=2pt,topsep=3pt,parsep=0pt}
+\setlist[enumerate]{leftmargin=1.5em,itemsep=7pt,topsep=3pt,parsep=0pt}
+\newcommand{\cvname}{Vishnuram Arumugam}
+\newcommand{\placeholder}[1]{{\color{muted}[#1]}}
+\newcommand{\cventry}[4]{%
+  \par\addvspace{7pt}\noindent
+  \begin{minipage}[t]{26mm}\raggedright\small\sffamily\color{muted}#1\end{minipage}%
+  \begin{minipage}[t]{\dimexpr\textwidth-26mm\relax}
+    \setlength{\parskip}{2pt}\raggedright
+    \textbf{#2}\par #3\par
+    \ifstrempty{#4}{}{\small #4\par}
+  \end{minipage}\par}
+\newcommand{\cvline}[2]{%
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{30mm}%
+    >{\raggedright\arraybackslash}X@{}}\textbf{#1}& #2\end{tabularx}\par}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\footnotesize\sffamily\color{muted}\cvname\enspace /\enspace Curriculum Vitae}
+\fancyfoot[R]{\footnotesize\sffamily\color{muted}\thepage\ /\ \pageref*{LastPage}}
+
+\begin{document}
+
+{\fontsize{30}{34}\selectfont\cvname}\par
+\vspace{2pt}
+%{\large\sffamily\color{accent}Mathematician\enspace|\enspace Curriculum vitae}\par
+{\large\sffamily\color{accent}Curriculum Vitae}\par
+\vspace{6pt}
+%\placeholder{Department / affiliation, if applicable}\enspace\textperiodcentered\enspace
+%\placeholder{City, country}\\[2pt]
+\href{mailto:nuvishramun@gmail.com}{nuvishramun@gmail.com}\enspace\textperiodcentered\enspace
+\href{https://nuvishramun.github.io/}{nuvishramun.github.io}\enspace\textperiodcentered\enspace
+\href{https://orcid.org/0000-0002-5229-2012}{ORCID: 0000-0002-5229-2012}
+\par\vspace{8pt}
+{\color{accent}\hrule height 1.1pt}
+
+\section{Research Interests}
+Group theory, graph theory, probability and combinatorics, with particular
+interests in permutation groups and symmetries of graphs.
+
+\section{Education}
+\cventry{\large 2022--2026}{PhD (Mathematics)}{The University of Western Australia}{%
+\textbf{Thesis Title:} Groups of Lie Type Acting on Generalised Quadrangles \\
+\textbf{Description:} Studying the existence of generalised quadrangles that 
+admit a point- and line-primitive automorphism group with socle
+isomorphic to a Suzuki or a Ree group. \\
+  %Topic: groups of Lie type acting on generalised quadrangles.\\
+ \textbf{Supervisors:} Michael Giudici and John Bamberg.}% Awarded: April, 2026.}
+\cventry{\large 2016--2021}{Bachelor of Engineering Honours (Mechatronic Engineering) \\  Bachelor of Science (Computer Science)}{%
+  Curtin University}{%
+\textbf{Thesis Title:} A Geometric Framework for Distributed Frequency 
+Models \\
+\textbf{Description:} Establishing geometric characterisations of control
+theoretic notions for state-space systems with a fractional derivative
+operator. \\
+\textbf{Supervisors:} Lorenzo Ntogramatzidis and Fabrizio Padula.}
+
+% Add appointments here when applicable, using \cventry. A recent graduate
+% need not have a separate research appointment to present a strong CV.
+% \section{Research appointments}
+% \cventry{2026--present}{Research Associate}{University}{Project / group.}
+
+\section{Publications and Preprints}
+% Use separate subsections for refereed papers and preprints if there are
+% several of each. Replace these examples with your actual bibliography.
+\begin{enumerate}[{[1]}]
+\item Arumugam V. (2026). ``Large Ree groups acting point and line-primitively on 
+finite generalised quadrangles''.  \\
+\textbf{arXiv:} \href{https://arxiv.org/abs/2610.39690}{https://arxiv.org/abs/2610.39690}
+
+\item Arumugam V., Praeger C. E., Rademacher D. (2026). ``Structure of Cayley 
+Codes''. \\ 
+\textbf{arXiv:} \href{https://arxiv.org/abs/2606.28611}{https://arxiv.org/abs/2606.28611}
+
+\item Arumugam V., Bamberg J., \& Giudici M. (2025). ``Low Rank Groups of Lie 
+Type Acting Point- and Line-Primitively on Finite Generalised Quadrangles''. 
+In \emph{Electronic Journal of Combinatorics}, 32(1), Article P143. 
+\href{https://doi.org/10.37236/12993}{https://doi.org/10.37236/12993}. 
+
+\item Arumugam V., Dietrich H., \& Glasby S. P. (2024). ``Derangements in wreath 
+products of permutation groups''. In \emph{Journal of Algebraic
+Combinatorics}, 59(1), 1-22.
+\href{https://doi.org/10.1007/s10801-023-01255-1}
+{https://doi.org/10.1007/s10801-023-01255-1}. 
+
+\item Arumugam V., Ferrante A., Ntogramatzidis L., \& Padula F. (2024). 
+``A geometric framework for distributed frequency models''. 
+In \emph{Communications in Nonlinear Science and Numerical Simulation}, 136. 
+\href{https://doi.org/10.1016/j.cnsns.2024.108088}
+{https://doi.org/10.1016/j.cnsns.2024.108088}. 
+
+\item Arumugam V., Ntogramatzidis L., \& Ferrante A. ``On the structure of the
+solutions of continuous-time algebraic Riccati equations with closed-loop
+eigenvalues on the imaginary axis''. In \emph{Proceedings of the 21st 
+International Federation of Automatic Control (IFAC) World Congress}, Berlin, 
+Germany, July 11-17, 2020. 
+
+%  \item \textbf{\cvname}, \placeholder{Coauthor(s)}.
+%    ``\placeholder{Title of published or accepted paper}.''
+%    \emph{\placeholder{Journal}} \placeholder{Volume} (\placeholder{Year}),
+%    \placeholder{Pages / article number}.
+%    \placeholder{DOI link}. \placeholder{State ``accepted'' if applicable.}
+%  \item \textbf{\cvname}, \placeholder{Coauthor(s)}.
+%    ``\placeholder{Title of preprint}.''
+%    Preprint, \placeholder{Year}. \placeholder{arXiv link}.
+\end{enumerate}
+
+\section{Articles in Preparation}
+\begin{enumerate}[{[1]}]
+\item 
+\textbf{Title:} Multicirculants and Generalised Quadrangles \\
+\textbf{Authors:} Vishnuram Arumugam, Bo\v{s}tjan Frelih and Klavdija Kutnar \\
+\textbf{Description:} Studying multicirculant structures on the incidence and 
+point graphs of finite generalized quadrangles. 
+
+\item 
+\textbf{Title:} Point-primitive Generalised Quadrangles \\ 
+\textbf{Authors:} Vishnuram Arumugam, John Bamberg and Tao Feng \\
+\textbf{Description:} Analysing point-primitive generalised quadrangles of 
+product action type.
+
+\item 
+\textbf{Title:} Cayley Numbers \\
+\textbf{Authors:} Vishnuram Arumugam and Edward Dobson \\
+\textbf{Description:} Classifying cyclic numbers that are Cayley numbers. 
+
+\item 
+\textbf{Title:} Point-regular Generalised Quadrangles \\
+\textbf{Authors:} Vishnuram Arumugam and Zhaochen Ding \\
+\textbf{Description:} Studying point-regular generalised quadrangles of 
+order $(s,s)$ where $s$ is odd. \\
+\end{enumerate}
+
+\section{Research Visits and Collaborations}
+
+\cventry{\large June 2026}{Collaboration with Tao Feng}{%
+  Zhejiang University, China}{%
+  \textbf{Host:} Professor Tao Feng, Zhejiang University \\
+  \textbf{Topic:} Point-primitive Generalised Quadrangles.}
+
+\cventry{\large August 2026}{Collaboration at UP FAMNIT}{%
+  University of Primorska, Slovenia}{%
+  \textbf{Host:} The Faculty of Mathematics, Natural Sciences and Information Technologies \\
+  \textbf{Topic:} Algebraic Graph Theory.}
+
+\section{Awards and Funding}
+
+\cventry{\large 2022--2025}{Australian Research Training Program}{%
+  Australian Government}{%
+  Funding support for students undertaking higher degree by research}
+  
+\cventry{\large 2023}{AMSI Summer School 2023 Travel Grant}{%
+  Australian Mathematical Sciences Institute}{%
+  Funding for attending the AMSI Summer School 2023}
+
+\cventry{\large 2022}{AMSI Winter School 2022 Travel Grant}{%
+  Australian Mathematical Sciences Institute}{%
+  Funding for attending the AMSI Winter School 2022}
+
+%\cventry{[Year]}{\placeholder{Scholarship, award or research grant}}{%
+%  \placeholder{Awarding organisation}}{%
+%  \placeholder{Purpose; value or competitive distinction, if relevant}}
+
+\newpage
+
+%{\Large\sffamily\bfseries \cvname}\hfill
+%{\small\sffamily\color{muted}Research \textperiodcentered\ Teaching \textperiodcentered\ Service}
+%\par\vspace{5pt}{\color{accent}\hrule height 0.7pt}
+
+\section{Teaching Experience}
+\cventry{\large 2018--2026}{Tutor in Mathematics and Engineering}{%
+  Curtin University}{%
+  %Tutored units in mathematics and engineering.\\
+  \textbf{Units:} Calculus 2, Linear Algebra 2, Complex Analysis, Functional Analysis, 
+  Dynamic Modelling \& Control, Advanced Mathematics 2, 
+  Mathematics \& Probability Theory and Network Optimisation. \\
+  \textbf{Responsibilities:} Tutorials, workshops, labs, some lectures and marking.}
+
+\cventry{\large 2023--2026}{Tutor in Mathematics and Computer Science}{%
+  The University of Western Australia}{%
+  %Tutored units in mathematics and engineering.\\
+  \textbf{Units:} Discrete Structures, Algebra, Multivariable Calculus, 
+  Mathematical Theory \& Methods and Mathematics Fundamentals. \\
+  \textbf{Responsibilities:} Tutorials, workshops, labs, some lectures and marking.}
+
+
+
+
+%\cventry{[Year]--[Year]}{Tutor in mathematics and engineering}{%
+%  \placeholder{University / department}}{%
+%  Tutored units in mathematics and engineering.\\
+%  Units: \placeholder{Course titles; level / year of study}.\\
+%  Responsibilities: \placeholder{Tutorials, marking, consultation or other actual duties}.}
+% Duplicate this entry for distinct roles; group repeated semesters sensibly.
+% Add supervision only if you have formally supervised students.
+
+\section{Selected Talks}
+%\hspace*{-0.25cm}
+%\begin{tabular}{lll}
+%2025 & May \& Aug & Groups and Combinatorics Seminars, The University of
+%Western Australia \\
+%2024 & Aug & Groups and Combinatorics Seminars, The University of
+%Western Australia \\
+%2023 & Dec & 45th Australasian Combinatorics Conference, The University of
+%Western Australia \\
+%2023 & Sep & Mathematics and Physics Research Talks, The University of
+%Western Australia \\
+%2023 & Jul & Rijeka Conference on Combinatorial Objects and Their
+%Applications, University of Rijeka \\
+%2023 & Jan & AMSI Summer School 2023, The University of Melbourne \\
+%2022 & Aug & Mathematics and Physics Research Talks, The University of
+%Western Australia \\
+%2022 & Jun & AMSI Winter School 2022, University of Queensland \\
+%\end{tabular}
+
+\cventry{\large May 2025}{Low Rank Groups of Lie Type Acting on Generalised Quadrangles Parts I \& II}{%
+  Groups and Combinatorics Seminars \\ 
+  Centre for the Mathematics of Symmetry and Computation \\
+  The University of Western Australia % 
+  }{%
+  }
+  %\textbf{Title:} }
+  
+\cventry{\large Sep 2023}{An Introduction to Graph Limit Theory}{%
+   Mathematics and Physics Research Talks \\  
+   The University of Western Australia % 
+   }{
+   }%
+  
+  
+\cventry{\large Aug 2023}{History and Various Constructions of the Family of Suzuki Groups}{%
+   Groups and Combinatorics Seminars \\
+   Centre for the Mathematics of Symmetry and Computation \\
+   The University of Western Australia % 
+    }{
+    }%
+    
+    
+%\section{Academic Service and Outreach}
+%\cventry{[Year]}{\placeholder{Service or outreach role}}{%
+  %\placeholder{Organisation / event}}{%
+  %\placeholder{Brief description of contribution}}
+
+% Examples, only if applicable: seminar organisation, student representation,
+% journal refereeing (journal names only), school outreach or mentoring.
+
+\section{Technical Skills}
+\cvline{Programming}{\LaTeX, Mathematica, GAP, Python, C, Magma, MATLAB, Git.}
+%\cvline{Mathematical software}{Mathematica, GAP, Magma and MATLAB.}
+% Add LaTeX, other languages, packages or computational methods only if accurate.
+
+\section{Referees}
+\begin{flushleft}
+\textbf{Professor Michael Giudici} (PhD Supervisor) \\
+%School of Physics, Mathematics and Computing, The University of Western Australia \\
+%\textbf{Affiliation:} 
+The University of Western Australia \\
+%\textbf{Department:} Mathematics and Statistics\\
+%Phone: (08) 6488 3351 \\
+%\textbf{Email:} 
+\href{mailto:michael.giudici@uwa.edu.au}{michael.giudici@uwa.edu.au}
+\end{flushleft}
+
+\begin{flushleft}
+\textbf{Associate Professor John Bamberg} (PhD Co-supervisior) \\
+%School of Physics, Mathematics and Computing, The University of Western Australia \\
+%\textbf{Affiliation:} 
+The University of Western Australia \\
+%\textbf{Department:} Mathematics and Statistics \\
+%Phone: (08) 6488 7173 \\
+%\textbf{Email:} 
+\href{mailto:john.bamberg@uwa.edu.au}{john.bamberg@uwa.edu.au}
+\end{flushleft}
+
+\begin{flushleft}
+\textbf{Dr Greg Gamble} \\
+%School of Physics, Mathematics and Computing, The University of Western Australia \\
+%\textbf{Affiliation:} 
+The University of Western Australia \\
+%\textbf{Department:} Mathematics and Statistics \\
+%\textbf{Email:}
+\href{mailto:greg.gamble@uwa.edu.au}{greg.gamble@uwa.edu.au}
+\end{flushleft}
+
+\newpage 
+
+\begin{comment}
+\begin{flushleft} 
+\textbf{Professor Dimitri Leemans} \\
+%\textbf{Affiliation:} 
+Universit\'{e} Libre de Bruxelles \\
+%\textbf{Department:} Mathematics \\
+%Phone: (08) 6488 7173 \\
+%\textbf{Email:} 
+\href{mailto:leemans.dimitri@ulb.be}{leemans.dimitri@ulb.be}
+\end{flushleft}
+
+
+\begin{flushleft}
+\textbf{Professor Tao Feng} \\
+%\textbf{Affiliation:} 
+Zhejiang University \\
+%\textbf{Department:} Mathematical Sciences \\
+%Phone: (08) 6488 7173 \\
+%\textbf{Email:} 
+\href{mailto:tfeng@zju.edu.cn}{tfeng@zju.edu.cn}
+\end{flushleft}
+\end{comment}
+
+
+
+
+
+% Obtain consent before listing referees. Choose people who can address
+% research and teaching; two or three is typical, subject to the job ad.
+
+%\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X@{\hspace{10mm}}%
+%  >{\raggedright\arraybackslash}X@{}}
+%  \textbf{\placeholder{Professor / Dr Name}} & \textbf{\placeholder{Professor / Dr Name}}\\[2pt]
+%  \placeholder{Department} & \placeholder{Department}\\
+%  \placeholder{University} & \placeholder{University}\\
+%  \placeholder{Email} & \placeholder{Email}\\[3pt]
+%  {\small\color{muted}\placeholder{PhD supervisor / relationship}} &
+%  {\small\color{muted}\placeholder{Research / teaching relationship}}
+%\end{tabularx}
+
+\end{document}
