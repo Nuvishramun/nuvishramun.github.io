@@ -98,8 +98,11 @@ def is_bold(line):
     return bool(spans) and all('bold' in s['font'].lower() or s['flags'] & 16 for s in spans)
 
 
-def paragraphs(lines, links=None):
-    """Keep labelled fields separate; join ordinary lines into flowing text."""
+def paragraphs(lines, links=None, preserve_lines=False):
+    """Reflow prose; keep separate name/affiliation/contact lines for referees."""
+    if preserve_lines:
+        return ''.join('<p>' + inline_links(line_text(line), links or {}) + '</p>'
+                       for line in lines if line_text(line))
     groups, current = [], []
     for line in lines:
         text = line_text(line)
@@ -147,6 +150,7 @@ def render_body(pdf_path):
         name = ''
         output = []
         section_open = False
+        current_section = ''
         for index, (block, text, size, links) in enumerate(records):
             if index == 0 and size > body_size * 1.6:
                 name = text
@@ -167,17 +171,19 @@ def render_body(pdf_path):
                 output.append(f'<section class="section cv-section" id="{slug}"><h2>{escape(text)}</h2>')
                 section_open = True
                 headings.append((slug, text))
+                current_section = text.casefold()
                 continue
             lines = block['lines'][:]
+            keep_lines = current_section in {'referees', 'references'}
             date = line_text(lines[0]) if DATE.fullmatch(line_text(lines[0])) else ''
             if date:
                 lines.pop(0)
                 title = line_text(lines.pop(0)) if lines else ''
                 title_html = '<h3>' + inline_links(title, links) + '</h3>' if title else ''
-                content = title_html + paragraphs(lines, links)
+                content = title_html + paragraphs(lines, links, preserve_lines=keep_lines)
                 output.append('<article class="cv-entry"><p class="cv-date">' + escape(date) + '</p><div>' + content)
             else:
-                output.append('<article class="cv-pdf-block">' + paragraphs(lines, links))
+                output.append('<article class="cv-pdf-block">' + paragraphs(lines, links, preserve_lines=keep_lines))
             output.append('</div></article>' if date else '</article>')
         if section_open:
             output.append('</section>')
