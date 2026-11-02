@@ -22,12 +22,19 @@ body:not([data-page="about"]) .content{max-width:820px;margin-inline:auto}
 
 @media(prefers-reduced-motion:reduce){.navigation a::after{transition:none}}
 
-/* Every page uses About's header width and right-aligned navigation. Keep
-   the same header height even when the About-only name/logo is absent. */
-.header-inner{min-height:85px}
+/* Keep the same header columns on every page, even without the About logo.
+   A stable scrollbar prevents longer pages moving the centered header. */
+html{overflow-y:scroll;scrollbar-gutter:stable}
+.header-inner{display:grid;grid-template-columns:minmax(0,1fr) auto 40px;min-height:85px}
+.header-inner .brand{grid-column:1;grid-row:1;min-width:0;overflow:hidden;text-overflow:ellipsis;margin:0}
+.header-inner .navigation{grid-column:2;grid-row:1;margin:0;white-space:nowrap}
+.header-inner .theme-toggle{grid-column:3;grid-row:1;margin:0}
 @media(max-width:1000px){.header-inner{min-height:81px}}
 @media(max-width:760px){
-  .header-inner{min-height:72px}
-  body:not([data-page="about"]) .menu-toggle{margin-left:auto}
+  .header-inner{grid-template-columns:minmax(0,1fr) auto 40px;min-height:72px}
+  .header-inner .menu-toggle{grid-column:2;grid-row:1;margin:0}
+  .header-inner .navigation{grid-column:1/-1;grid-row:2;margin:6px 0 0;white-space:normal}
 }
-@media(max-width:450px){.header-inner{min-height:67px}}
+@media(max-width:450px){
+  .header-inner{grid-template-columns:minmax(0,1fr) auto 35px;min-height:67px}
+}
