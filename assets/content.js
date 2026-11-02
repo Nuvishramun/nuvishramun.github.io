@@ -11,7 +11,7 @@ window.SITE = {
   cv: "files/cv.pdf", // e.g. files/cv.pdf (upload the PDF before adding its path)
   links: [
     // { label: "GitHub", url: "https://github.com/your-username" },
-    // { label: "ORCID", url: "https://orcid.org/your-id" },
+    { label: "ORCID", url: "https://orcid.org/0000-0002-5229-2012" },
     // { label: "Google Scholar", url: "https://scholar.google.com/citations?user=your-id" }
   ],
   introduction: "I am a mathematician working in group theory and combinatorics.",
@@ -19,7 +19,7 @@ window.SITE = {
     "My research explores the interplay between algebraic symmetry, graphs, and finite geometry. I am particularly interested in how group actions illuminate the structure of combinatorial objects.",
     "I completed my PhD in group theory and combinatorics, studying groups acting on generalised quadrangles. My current interests include Cayley graphs and semiregular group actions."
   ],
-  interests: ["Group theory", "Algebraic graph theory", "Finite geometry"],
+  interests: ["Group Theory", "Graph Theory", "Probability Theory", "Finite Geometry"],
   research: [
     { title: "Groups and finite geometry", text: "Group actions on generalised quadrangles, symmetry in incidence structures, and classification problems." },
     { title: "Cayley graphs and symmetry", text: "Cayley graphs, semiregular automorphisms, and the connections between finite groups and graph structure." },

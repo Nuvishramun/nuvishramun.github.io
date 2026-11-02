@@ -51,25 +51,46 @@ def safe_uri(uri):
     return urlsplit(uri).scheme.lower() in {'https', 'http', 'mailto'}
 
 
-def links_for(block, annotations):
+def links_for(block, annotations, page):
+    """Keep the actual PDF label as well as its target, including wrapped links."""
     box = pymupdf.Rect(block['bbox'])
-    return list(dict.fromkeys(
-        item['uri'] for item in annotations
-        if item.get('uri') and safe_uri(item['uri'])
-        and box.intersects(item['from'])
-    ))
+    found = {}
+    for item in annotations:
+        uri = item.get('uri', '')
+        if uri and safe_uri(uri) and box.intersects(item['from']):
+            label = join_lines(page.get_textbox(item['from']).splitlines()).strip()
+            found.setdefault(uri, []).append(label)
+    return found
 
 
-def link_label(uri):
-    if uri.startswith('mailto:'):
-        return uri[7:]
-    if 'arxiv.org/abs/' in uri:
-        return 'arXiv: ' + uri.split('/abs/', 1)[1]
-    if 'doi.org/' in uri:
-        return 'DOI'
-    if 'orcid.org/' in uri:
-        return 'ORCID'
-    return urlsplit(uri).netloc or uri
+def inline_links(text, links):
+    """Escape all PDF text, inserting anchors only around matching text labels."""
+    matches = []
+    for uri, labels in links.items():
+        candidates = [uri, *labels, join_lines(labels)]
+        if uri.startswith('mailto:'):
+            candidates.append(uri[7:])
+        elif uri.startswith(('https://', 'http://')):
+            candidates.append(uri.split('://', 1)[1].rstrip('/'))
+        for label in candidates:
+            # Sentence punctuation belongs outside URL links.
+            label = label.strip().rstrip('.,;')
+            if not label:
+                continue
+            for match in re.finditer(re.escape(label), text):
+                matches.append((match.start(), match.end(), uri))
+    # Prefer the complete label over overlapping fragments of a wrapped link.
+    selected = []
+    for start, end, uri in sorted(matches, key=lambda m: (-(m[1]-m[0]), m[0])):
+        if not any(start < b and end > a for a, b, _ in selected):
+            selected.append((start, end, uri))
+    result, cursor = [], 0
+    for start, end, uri in sorted(selected):
+        result.append(escape(text[cursor:start]))
+        result.append(f'<a href="{escape(uri, quote=True)}">{escape(text[start:end])}</a>')
+        cursor = end
+    result.append(escape(text[cursor:]))
+    return ''.join(result)
 
 
 def is_bold(line):
@@ -77,7 +98,7 @@ def is_bold(line):
     return bool(spans) and all('bold' in s['font'].lower() or s['flags'] & 16 for s in spans)
 
 
-def paragraphs(lines):
+def paragraphs(lines, links=None):
     """Keep labelled fields separate; join ordinary lines into flowing text."""
     groups, current = [], []
     for line in lines:
@@ -93,7 +114,7 @@ def paragraphs(lines):
             current = []
     if current:
         groups.append(join_lines(current))
-    return ''.join('<p>' + escape(text) + '</p>' for text in groups)
+    return ''.join('<p>' + inline_links(text, links or {}) + '</p>' for text in groups)
 
 
 def render_body(pdf_path):
@@ -116,7 +137,7 @@ def render_body(pdf_path):
                 if block['bbox'][1] > page.rect.height * .94 and size < 10:
                     continue
                 block['lines'] = lines
-                records.append((block, text, size, links_for(block, annotations)))
+                records.append((block, text, size, links_for(block, annotations, page)))
                 for span in spans:
                     sizes[round(span['size'], 1)] += len(span['text'])
         if not records or sum(len(r[1]) for r in records) < 50:
@@ -152,15 +173,11 @@ def render_body(pdf_path):
             if date:
                 lines.pop(0)
                 title = line_text(lines.pop(0)) if lines else ''
-                title_html = '<h3>' + escape(title) + '</h3>' if title else ''
-                content = title_html + paragraphs(lines)
+                title_html = '<h3>' + inline_links(title, links) + '</h3>' if title else ''
+                content = title_html + paragraphs(lines, links)
                 output.append('<article class="cv-entry"><p class="cv-date">' + escape(date) + '</p><div>' + content)
             else:
-                output.append('<article class="cv-pdf-block">' + paragraphs(lines))
-            if links:
-                output.append('<div class="entry-links">' + ''.join(
-                    f'<a href="{escape(uri, quote=True)}">{escape(link_label(uri))} ↗</a>' for uri in links
-                ) + '</div>')
+                output.append('<article class="cv-pdf-block">' + paragraphs(lines, links))
             output.append('</div></article>' if date else '</article>')
         if section_open:
             output.append('</section>')
