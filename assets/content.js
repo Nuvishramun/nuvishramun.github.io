@@ -28,7 +28,8 @@ window.SITE = {
   papers: [
     // { title: "Paper title", authors: "Your Name and Coauthor", venue: "Journal, volume (year), pages", year: 2026, links: [{label: "PDF", url: "files/paper.pdf"}, {label: "arXiv", url: "https://arxiv.org/abs/..."}] }
   ],
-  teachingIntro: "I aim to make abstract mathematics accessible through motivating examples, clear explanations, and a careful progression towards formal ideas.",
+  teachingIntro: "",
+  // "I aim to make abstract mathematics accessible through motivating examples, clear explanations, and a careful progression towards formal ideas.",
   courses: [
     // { title: "Course name", detail: "University · Tutor · Semester 1, 2026", description: "Topics or a short course description.", url: "" }
   ],
