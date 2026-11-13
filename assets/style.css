@@ -60,11 +60,20 @@ html{overflow-y:scroll;scrollbar-gutter:stable}
 .blog-post>h1{margin-bottom:10px}
 .blog-post>.post-date{margin:0 0 28px}
 
-/* TikZ labels use the figure's own colours, even in dark mode. */
-.markdown-content img[src^="assets/figures/"],
-.markdown-content img[src^="../assets/figures/"]{
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:6px;
+/* TikZ diagrams use the page background and follow the site theme. */
+.markdown-content img:is([src^="assets/figures/"],[src^="../assets/figures/"]){
+  background:transparent;
   padding:12px;
+}
+:root[data-theme="dark"] .markdown-content img:is([src^="assets/figures/"],[src^="../assets/figures/"]):not(.keep-figure-colours){
+  filter:invert(1) hue-rotate(180deg);
+}
+.markdown-content img:is([src^="assets/figures/"],[src^="../assets/figures/"]).keep-figure-colours{
+  background:#fff;
+  border-radius:6px;
+}
+@media print{
+  :root[data-theme="dark"] .markdown-content img:is([src^="assets/figures/"],[src^="../assets/figures/"]):not(.keep-figure-colours){
+    filter:none;
+  }
 }
