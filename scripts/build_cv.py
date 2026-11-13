@@ -197,7 +197,7 @@ def render_body(tex):
     def html(items):
         document = {**doc, 'meta':{}, 'blocks':items}
         return pandoc(json.dumps(document), '-f', 'json', '-t', 'html5', '--mathml', '--wrap=none')
-    return ('<div class="cv-detail"><p class="eyebrow">Academic background</p><h1>Curriculum vitae</h1>\n'
+    return ('<div class="cv-detail"><p class="eyebrow">Academic background</p><h1>Curriculum Vitae</h1>\n'
             + html(intro) + '<p><a class="button" href="files/cv.pdf">Download CV (PDF) ↓</a></p>\n'
             + nav + '\n' + html(sections) + '\n</div>')
 
