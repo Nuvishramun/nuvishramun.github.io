@@ -59,3 +59,12 @@ html{overflow-y:scroll;scrollbar-gutter:stable}
 .blog-post>.small-link{display:inline-block;margin-bottom:18px}
 .blog-post>h1{margin-bottom:10px}
 .blog-post>.post-date{margin:0 0 28px}
+
+/* TikZ labels use the figure's own colours, even in dark mode. */
+.markdown-content img[src^="assets/figures/"],
+.markdown-content img[src^="../assets/figures/"]{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:12px;
+}

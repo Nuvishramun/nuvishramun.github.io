@@ -1,0 +1,10 @@
+\documentclass[tikz,border=5pt]{standalone}
+
+\begin{document}
+\begin{tikzpicture}[thick, every node/.style={circle,draw,inner sep=3pt}]
+  \node (u) at (0,0)   {$u$};
+  \node (v) at (2,0)   {$v$};
+  \node (w) at (1,1.5) {$w$};
+  \draw (u) -- (v) -- (w) -- (u);
+\end{tikzpicture}
+\end{document}

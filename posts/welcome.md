@@ -8,3 +8,5 @@ draft: false
 Write your post here. Set `draft: false` when it is ready to publish.
 
 You can use headings, links, code blocks, and mathematics such as $|G| = |G_x|\,|x^G|$.
+
+![A triangle graph with vertices u, v, and w.](assets/figures/triangle.svg)

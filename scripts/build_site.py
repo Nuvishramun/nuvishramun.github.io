@@ -6,6 +6,7 @@ import shutil
 import subprocess
 from build_cv import build
 from build_markdown import build_markdown
+from build_figures import build_figures
 
 
 def build_site(root):
@@ -15,8 +16,9 @@ def build_site(root):
     if not shutil.which('latexmk'): raise ValueError('latexmk and pdfLaTeX are required; see UPDATE-CV.md.')
     staging, output, tex_build = root/'_site-build', root/'_site', root/'_build/cv'
     if staging.exists(): shutil.rmtree(staging)
-    ignored = shutil.ignore_patterns('.git', '.github', '.venv', '__pycache__', '_site', '_site-build', '_build', 'scripts', 'content', 'posts', 'markdown-migration', 'tests', 'node_modules', '*.zip', '*.md', '*.tex', '*.aux', '*.log', '*.out', '*.fls', '*.fdb_latexmk', '.DS_Store')
+    ignored = shutil.ignore_patterns('.git', '.github', '.venv', '__pycache__', '_site', '_site-build', '_build', 'scripts', 'content', 'posts', 'figures', 'markdown-migration', 'tests', 'node_modules', '*.zip', '*.md', '*.tex', '*.aux', '*.log', '*.out', '*.fls', '*.fdb_latexmk', '.DS_Store')
     shutil.copytree(root, staging, ignore=ignored)
+    build_figures(root, staging)
     build_markdown(root, staging)
     # Build HTML first so unsupported constructs produce a clear failure.
     build(tex, staging/'cv.html', staging/'cv.html')

@@ -22,11 +22,11 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      - name: Install Pandoc and LaTeX
+      - name: Install Pandoc, LaTeX, and SVG tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends pandoc latexmk texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
-      - name: Build Markdown pages, blog, and CV
+          sudo apt-get install -y --no-install-recommends pandoc latexmk texlive-latex-base texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended poppler-utils
+      - name: Build pages, blog, CV, and figures
         run: python scripts/build_site.py
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
